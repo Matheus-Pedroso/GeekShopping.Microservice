@@ -1,4 +1,7 @@
+using AutoMapper;
+using GeekShopping.ProductAPI.Config;
 using GeekShopping.ProductAPI.Model.Context;
+using GeekShopping.ProductAPI.Repository;
 using Microsoft.EntityFrameworkCore;
 
 namespace GeekShopping.ProductAPI
@@ -43,6 +46,14 @@ namespace GeekShopping.ProductAPI
             {
                 options.UseMySql(connection, new MySqlServerVersion(new Version(8, 0, 4)));
             });
+
+            IMapper mapper = MappingConfig.RegisterMaps().CreateMapper(); 
+            builder.Services.AddSingleton(mapper);
+            builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+            // DI
+            builder.Services.AddScoped<IProductRepository, ProductRepository>();
+
         }
     }
 }
