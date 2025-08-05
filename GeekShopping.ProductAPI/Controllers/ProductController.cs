@@ -16,7 +16,7 @@ public class ProductController(IProductRepository repository) : ControllerBase
 
         return Ok(result);
     }
-    [HttpGet("Id")]
+    [HttpGet("{id:int}")]
     public async Task<ActionResult<ProductVO>> GetById(long id)
     {
         ProductVO result = await repository.FindById(id);

@@ -7,7 +7,7 @@ namespace GeekShopping.Web.Services;
 public class ProductService(HttpClient httpClient) : IProductService
 { 
     private readonly HttpClient _client = httpClient;
-    public const string BasePath = "api/v1/product";
+    public const string BasePath = "api/v1/Product";
 
     public async Task<IEnumerable<ProductModel>> FindAll()
     {
@@ -41,6 +41,6 @@ public class ProductService(HttpClient httpClient) : IProductService
         if (!response.IsSuccessStatusCode)
             throw new Exception("Something went wrong when calling API");
 
-        return await response.ReadContentAs<bool>();
+        return true;
     }
 }

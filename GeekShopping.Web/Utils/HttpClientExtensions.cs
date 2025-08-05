@@ -12,7 +12,10 @@ public static class HttpClientExtensions
             throw new ApplicationException($"Request failed with status code {response.StatusCode}");
 
         var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-        
+
+        if (string.IsNullOrWhiteSpace(content))
+            return default;
+
         try
         {
             return JsonSerializer.Deserialize<T>(content, new JsonSerializerOptions
