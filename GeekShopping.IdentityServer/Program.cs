@@ -18,6 +18,8 @@ namespace GeekShopping.IdentityServer
             // Add services to the container.
             builder.Services.AddControllersWithViews();
 
+            builder.Logging.AddConsole();
+
             var app = builder.Build();
 
             // Create scope for database initialization

@@ -1,6 +1,7 @@
 
 using GeekShopping.Web.Services;
 using GeekShopping.Web.Services.Interface;
+using GeekShopping.Web.Utils;
 using Microsoft.AspNetCore.Authentication;
 
 namespace GeekShopping.Web
@@ -40,10 +41,13 @@ namespace GeekShopping.Web
 
         private static void ConfigureServices(WebApplicationBuilder builder)
         {
+            builder.Services.AddHttpContextAccessor();
+            builder.Services.AddTransient<AccessTokenHandler>();
+
             builder.Services.AddHttpClient<IProductService, ProductService>(c =>
             {
                 c.BaseAddress = new Uri(builder.Configuration["ServiceUrls:ProductAPI"]);
-            });
+            }).AddHttpMessageHandler<AccessTokenHandler>();
 
 
             // Define authentication configuration
@@ -55,7 +59,8 @@ namespace GeekShopping.Web
                 .AddCookie("Cookies", c => c.ExpireTimeSpan = TimeSpan.FromMinutes(10))
                 .AddOpenIdConnect("oidc", options =>
                 {
-                    options.Authority = builder.Configuration["ServiceUrls:IdentityServer"];
+                    options.Authority = "https://localhost:4435"; // sem barra no final
+                    options.RequireHttpsMetadata = true;
                     options.GetClaimsFromUserInfoEndpoint = true;
                     options.ClientId = "geek_shopping";
                     options.ClientSecret = "my_secret";
@@ -67,6 +72,6 @@ namespace GeekShopping.Web
                     options.Scope.Add("geek_shopping");
                     options.SaveTokens = true;
                 });
-        }
+            }
     }
 }

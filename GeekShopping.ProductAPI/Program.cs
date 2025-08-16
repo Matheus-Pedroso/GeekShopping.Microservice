@@ -3,6 +3,8 @@ using GeekShopping.ProductAPI.Config;
 using GeekShopping.ProductAPI.Model.Context;
 using GeekShopping.ProductAPI.Repository;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 
 namespace GeekShopping.ProductAPI
 {
@@ -13,13 +15,47 @@ namespace GeekShopping.ProductAPI
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
-
             ConfigureServices(builder);
 
             builder.Services.AddControllers();
+
+            ConfigureAuthentication(builder);
+
+            builder.Logging.AddConsole();
+
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "GeekShopping.ProductAPI", Version = "v1" });
+                c.EnableAnnotations();
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+                    Name = "Authorization",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.ApiKey,
+                    Scheme = "Bearer"
+                });
+
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement 
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            },
+                            Scheme = "oauth2",
+                            Name = "Bearer",
+                            In = ParameterLocation.Header
+                        },
+                        new List<string>()
+                    }
+                });
+            });
 
             var app = builder.Build();
 
@@ -30,12 +66,36 @@ namespace GeekShopping.ProductAPI
                 app.UseSwaggerUI();
             }
             app.UseHttpsRedirection();
+            app.UseAuthentication();
             app.UseAuthorization();
-
 
             app.MapControllers();
 
             app.Run();
+        }
+
+        private static void ConfigureAuthentication(WebApplicationBuilder builder)
+        {
+            // Add Authentication
+            builder.Services.AddAuthentication("Bearer")
+                .AddJwtBearer("Bearer", options =>
+                {
+                    options.Authority = "https://localhost:4435"; // Identity Server
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateAudience = false,
+                    };
+                });
+
+            // Add Authorization
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy("ApiScope", policy =>
+                {
+                    policy.RequireAuthenticatedUser();
+                    policy.RequireClaim("scope", "geek_shopping");
+                });
+            });
         }
 
         // This method is used to configure services customize for the application.

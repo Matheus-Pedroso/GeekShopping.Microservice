@@ -36,6 +36,8 @@ public static class IdentityConfiguration
                     new Secret("secret".Sha256())
                 },
                 AllowedGrantTypes = GrantTypes.ClientCredentials,
+                RequirePkce = true,
+                AllowOfflineAccess = true,
                 AllowedScopes = { "read", "write", "profile" }
             },
             new Client
@@ -46,6 +48,8 @@ public static class IdentityConfiguration
                     new Secret("my_secret".Sha256())
                 },
                 AllowedGrantTypes = GrantTypes.Code,
+                RequirePkce = true,
+                RequireConsent = false,
                 RedirectUris = { "https://localhost:4430/signin-oidc" },
                 PostLogoutRedirectUris = { "https://localhost:4430/signout-callback-oidc" },
                 AllowedScopes = new List<string>
@@ -54,7 +58,8 @@ public static class IdentityConfiguration
                     IdentityServerConstants.StandardScopes.Profile,
                     IdentityServerConstants.StandardScopes.Email,
                     "geek_shopping"
-                }
+                },
+                AlwaysIncludeUserClaimsInIdToken = true,
             }
         };
 }
