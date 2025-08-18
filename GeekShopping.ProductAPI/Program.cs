@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using AutoMapper;
 using GeekShopping.ProductAPI.Config;
 using GeekShopping.ProductAPI.Model.Context;
@@ -20,8 +21,6 @@ namespace GeekShopping.ProductAPI
             builder.Services.AddControllers();
 
             ConfigureAuthentication(builder);
-
-            builder.Logging.AddConsole();
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -84,6 +83,7 @@ namespace GeekShopping.ProductAPI
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateAudience = false,
+                        RoleClaimType = ClaimTypes.Role,
                     };
                 });
 

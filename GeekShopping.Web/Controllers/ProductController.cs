@@ -42,7 +42,7 @@ namespace GeekShopping.Web.Controllers
             return NotFound();
         }
 
-        [HttpPut]
+        [HttpPost]
         [Authorize]
         public async Task<IActionResult> ProductUpdate(ProductModel model)
         {
