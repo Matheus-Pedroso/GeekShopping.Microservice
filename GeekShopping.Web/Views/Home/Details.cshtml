@@ -1,0 +1,36 @@
+﻿@model GeekShopping.Web.Models.ProductModel
+
+<form method="post">
+	<input type="hidden" asp-for="Id" />
+
+	<div class="pt-4"> 
+		<div class="card container" style="border:1px solid #808080;">
+			<div class="card-header text-light row" style="border-radius: 0px;">
+				<div class="col-12 col-md-6">
+					<h1 class="text-dark">@Model.Name</h1>
+				</div>
+				<div class="col-12 col-md-6">
+					<h1 class="text-warning">@Model.Price.ToString("c")</h1>
+				</div>
+			</div>
+			<div class="card-body ">
+
+			</div>
+			<div class="card-footer row">
+				<div class="col-12 col-md-6 pb-1">
+					<a class="btn btn-success btn-square form-control btn-lg" style="height:50px">Back to List</a>
+				</div>
+
+				<div class="col-12 col-md-6">
+					<button type="submit" class="btn-primary form-control btn-lg" style="height:50px">Add to Cart</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+</form>
+
+
+@section Scripts {
+	<partial name="_ValidationScriptsPartial" />
+}

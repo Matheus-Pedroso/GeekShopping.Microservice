@@ -1,22 +1,24 @@
 using System.Diagnostics;
 using GeekShopping.Web.Models;
+using GeekShopping.Web.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GeekShopping.Web.Controllers
 {
-    public class HomeController : Controller
+    public class HomeController(ILogger<HomeController> logger, IProductService productService) : Controller
     {
-        private readonly ILogger<HomeController> _logger;
-
-        public HomeController(ILogger<HomeController> logger)
+        public async Task<IActionResult> Index()
         {
-            _logger = logger;
+            var products = await productService.FindAll();
+            return View(products);
         }
 
-        public IActionResult Index()
+        [Authorize]
+        public async Task<IActionResult> Details(int id)
         {
-            return View();
+            var product = await productService.FindById(id);
+            return View(product);
         }
 
         public IActionResult Privacy()

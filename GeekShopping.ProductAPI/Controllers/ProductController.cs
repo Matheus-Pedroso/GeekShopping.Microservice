@@ -10,7 +10,6 @@ namespace GeekShopping.ProductAPI.Controllers;
 [ApiController]
 public class ProductController(IProductRepository repository) : ControllerBase
 {
-    [Authorize]
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ProductVO>>> GetAll()
     {

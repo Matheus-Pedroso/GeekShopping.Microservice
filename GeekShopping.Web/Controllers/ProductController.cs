@@ -8,7 +8,6 @@ namespace GeekShopping.Web.Controllers
 {
     public class ProductController(IProductService productService) : Controller
     {
-        [Authorize]
         public async Task<IActionResult> ProductIndex()
         {
             var products = await productService.FindAll();

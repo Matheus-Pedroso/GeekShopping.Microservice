@@ -1,4 +1,5 @@
 
+using System.Globalization;
 using GeekShopping.Web.Services;
 using GeekShopping.Web.Services.Interface;
 using GeekShopping.Web.Utils;
@@ -16,6 +17,7 @@ namespace GeekShopping.Web
             builder.Services.AddControllersWithViews();
 
             ConfigureServices(builder);
+
 
             var app = builder.Build();
 
@@ -49,7 +51,6 @@ namespace GeekShopping.Web
                 c.BaseAddress = new Uri(builder.Configuration["ServiceUrls:ProductAPI"]);
             }).AddHttpMessageHandler<AccessTokenHandler>();
 
-
             // Define authentication configuration
             builder.Services.AddAuthentication(options =>
             {
@@ -72,6 +73,6 @@ namespace GeekShopping.Web
                     options.Scope.Add("geek_shopping");
                     options.SaveTokens = true;
                 });
-            }
+        }
     }
 }
