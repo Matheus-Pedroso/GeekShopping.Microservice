@@ -1,0 +1,23 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "GeekShopping.ProductAPI\\GeekShopping.ProductAPI.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "GeekShopping.Web\\GeekShopping.Web.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "GeekShopping.IdentityServer\\GeekShopping.IdentityServer.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "GeekShopping.CartAPI\\GeekShopping.CartAPI.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

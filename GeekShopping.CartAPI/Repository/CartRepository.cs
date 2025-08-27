@@ -16,12 +16,26 @@ public class CartRepository(MySQLContext context, IMapper mapper) : ICartReposit
 
     public async Task<bool> ClearCart(string userId)
     {
-        throw new NotImplementedException();
+        var cartHeader = await context.CartHeaders.FirstOrDefaultAsync(c => c.UserId == userId);
+        if (cartHeader != null)
+        {
+            context.CartDetails.RemoveRange(context.CartDetails.Where(c => c.CartHeaderId == cartHeader.Id));
+            context.CartHeaders.Remove(cartHeader);
+            await context.SaveChangesAsync();
+            return true;
+        }
+        return false;
     }
 
     public async Task<CartVO> FindCartByUserId(string userId)
     {
-        throw new NotImplementedException();
+        Cart cart = new Cart();
+        cart.CartHeader = await context.CartHeaders.AsNoTracking().FirstOrDefaultAsync(c => c.UserId == userId);
+        cart.CartDetails = context.CartDetails.AsNoTracking().Where(c => c.CartHeaderId == cart.CartHeader.Id).Include(c => c.Product);
+
+        var cartVO = mapper.Map<CartVO>(cart);
+
+        return cartVO;
     }
 
     public async Task<bool> RemoveCoupon(string userId)
@@ -31,7 +45,28 @@ public class CartRepository(MySQLContext context, IMapper mapper) : ICartReposit
 
     public async Task<bool> RemoveFromCart(long cartDetailsId)
     {
-        throw new NotImplementedException();
+        try
+        {
+            var cartDetails = await context.CartDetails.FirstOrDefaultAsync(c => c.Id == cartDetailsId);
+            if (cartDetails == null) 
+                return false;
+
+            int totalCountOfCartItems = context.CartDetails.Count(c => c.CartHeaderId == cartDetails.CartHeaderId);
+
+            context.CartDetails.Remove(cartDetails);
+            if (totalCountOfCartItems == 1)
+            {
+                var cartHeaderToRemove = await context.CartHeaders.FirstOrDefaultAsync(c => c.Id == cartDetails.CartHeaderId);
+                context.CartHeaders.Remove(cartHeaderToRemove);
+            }
+            await context.SaveChangesAsync();
+
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
     }
 
     public async Task<CartVO> SaveOrUpdateCart(CartVO vo)
