@@ -81,7 +81,7 @@ public class CartRepository(MySQLContext context, IMapper mapper) : ICartReposit
         }
 
         // Check if the CartHeader is null
-        var cartHeader = await context.CartHeaders.AsNoTracking().FirstOrDefaultAsync(c => c.UserId == vo.CartHeader.UserId);
+        var cartHeader = await context.CartHeaders.FirstOrDefaultAsync(c => c.UserId == vo.CartHeader.UserId);
         if (cartHeader == null)
         {
             // Create new CartHeader and CartDetails
@@ -95,7 +95,7 @@ public class CartRepository(MySQLContext context, IMapper mapper) : ICartReposit
         }
         else
         {
-            var cartDetails = await context.CartDetails.AsNoTracking().FirstOrDefaultAsync(p => p.ProductId == vo.CartDetails.FirstOrDefault().ProductId && p.CartHeaderId == cartHeader.Id);
+            var cartDetails = await context.CartDetails.FirstOrDefaultAsync(p => p.ProductId == cart.CartDetails.FirstOrDefault().ProductId && p.CartHeaderId == cartHeader.Id);
             if (cartDetails == null)
             {
                 // Create new CartDetails

@@ -46,9 +46,16 @@ namespace GeekShopping.Web
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddTransient<AccessTokenHandler>();
 
+            // ProductService
             builder.Services.AddHttpClient<IProductService, ProductService>(c =>
             {
                 c.BaseAddress = new Uri(builder.Configuration["ServiceUrls:ProductAPI"]);
+            }).AddHttpMessageHandler<AccessTokenHandler>();
+
+            // CartService
+            builder.Services.AddHttpClient<ICartService, CartService>(c =>
+            {
+                c.BaseAddress = new Uri(builder.Configuration["ServiceUrls:CartAPI"]);
             }).AddHttpMessageHandler<AccessTokenHandler>();
 
             // Define authentication configuration
