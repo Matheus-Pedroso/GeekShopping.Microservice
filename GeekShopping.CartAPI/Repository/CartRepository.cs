@@ -86,12 +86,10 @@ public class CartRepository(MySQLContext context, IMapper mapper) : ICartReposit
         {
             // Create new CartHeader and CartDetails
             context.CartHeaders.Add(cart.CartHeader);
-            await context.SaveChangesAsync();
 
-            cart.CartDetails.FirstOrDefault().CartHeaderId = cart.CartHeader.Id;
+            cart.CartDetails.FirstOrDefault().CartHeader = cart.CartHeader;
             cart.CartDetails.FirstOrDefault().Product = null; // Avoid re-inserting the product
             context.CartDetails.Add(cart.CartDetails.FirstOrDefault());
-            await context.SaveChangesAsync();
         }
         else
         {
@@ -99,21 +97,24 @@ public class CartRepository(MySQLContext context, IMapper mapper) : ICartReposit
             if (cartDetails == null)
             {
                 // Create new CartDetails
-                cart.CartDetails.FirstOrDefault().CartHeaderId = cartHeader.Id;
-                cart.CartDetails.FirstOrDefault().Product = null; // Avoid re-inserting the product
-                context.CartDetails.Add(cart.CartDetails.FirstOrDefault());
-                await context.SaveChangesAsync();
+                var newDetail = new CartDetail
+                {
+                    CartHeaderId = cartHeader.Id,
+                    ProductId = cart.CartDetails.First().ProductId,
+                    Count = cart.CartDetails.First().Count
+                };
+                context.CartDetails.Add(newDetail);
             }
             else
             {
-                // Update the count of the existing CartDetails
-                cart.CartDetails.FirstOrDefault().Product = null; // Avoid re-inserting the product
-                cart.CartDetails.FirstOrDefault().Count += cartDetails.Count;
-                cart.CartDetails.FirstOrDefault().Id = cartDetails.Id;
-                cart.CartDetails.FirstOrDefault().CartHeaderId = cartDetails.CartHeaderId;
-                context.CartDetails.Update(cart.CartDetails.FirstOrDefault());
+                var count = cart.CartDetails.Select(x => x.Count).FirstOrDefault();
+                cartDetails.Count += count;
+                cartDetails.CartHeaderId = cartDetails.CartHeaderId;
+                context.CartDetails.Update(cartDetails);
             }
         }
+        await context.SaveChangesAsync();
+
         return mapper.Map<CartVO>(cart);
     }
 }

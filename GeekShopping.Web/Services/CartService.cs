@@ -21,6 +21,7 @@ public class CartService(HttpClient httpClient) : ICartService
         if (!response.IsSuccessStatusCode)
         {
             var content = await response.Content.ReadAsStringAsync();
+            Console.WriteLine(content);
             throw new Exception("Something went wrong when calling API");
         }
         return await response.ReadContentAs<CartViewModel>();
