@@ -2,6 +2,7 @@
 using GeekShopping.Web.Models;
 using GeekShopping.Web.Services.Interface;
 using GeekShopping.Web.Utils;
+using Microsoft.AspNetCore.Cors.Infrastructure;
 
 namespace GeekShopping.Web.Services;
 
@@ -44,6 +45,19 @@ public class CartService(HttpClient httpClient) : ICartService
 
         return true;
     }
+    public async Task<CartViewModel> FindUserCart(string UserId)
+    {
+        var response = await FindCartByUserId(UserId);
+        if (response?.CartHeader != null)
+        {
+            foreach (var detail in response.CartDetails)
+            {
+                response.CartHeader.PurchaseAmount += (detail.Count * detail.Product.Price); // Calcula o valor total do carrinho
+            }
+        }
+
+        return response;
+    }
 
     public async Task<bool> ApplyCoupon(CartViewModel cart, long couponCode)
     {
@@ -64,4 +78,6 @@ public class CartService(HttpClient httpClient) : ICartService
     {
         throw new NotImplementedException();
     }
+
+  
 }

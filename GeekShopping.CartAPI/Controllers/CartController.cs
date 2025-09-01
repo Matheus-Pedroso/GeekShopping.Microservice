@@ -9,7 +9,7 @@ namespace GeekShopping.CartAPI.Controllers;
 [ApiController]
 public class CartController(ICartRepository cartRepository) : ControllerBase
 {
-    [HttpGet("find-cart/{id}")]
+    [HttpGet("find-cart/{userId}")]
     public async Task<ActionResult<CartVO>> FindById(string userId)
     {
         var cart = await cartRepository.FindCartByUserId(userId);
@@ -33,7 +33,7 @@ public class CartController(ICartRepository cartRepository) : ControllerBase
         return Ok(cart);
     }
 
-    [HttpDelete("remove-cart/{id}")]
+    [HttpDelete("remove-cart/{cartId}")]
     public async Task<ActionResult<bool>> RemoveCart(int cartId)
     {
         var status = await cartRepository.RemoveFromCart(cartId);
