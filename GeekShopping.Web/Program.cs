@@ -58,6 +58,12 @@ namespace GeekShopping.Web
                 c.BaseAddress = new Uri(builder.Configuration["ServiceUrls:CartAPI"]);
             }).AddHttpMessageHandler<AccessTokenHandler>();
 
+            // CouponService
+            //builder.Services.AddHttpClient<ICouponService, CouponService>(c =>
+            //{
+            //    c.BaseAddress = new Uri(builder.Configuration["ServiceUrls:CouponAPI"]);
+            //}).AddHttpMessageHandler<AccessTokenHandler>();
+
             // Define authentication configuration
             builder.Services.AddAuthentication(options =>
             {
