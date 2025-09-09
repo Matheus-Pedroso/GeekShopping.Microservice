@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Cors.Infrastructure;
 
 namespace GeekShopping.Web.Services;
 
-public class CartService(HttpClient httpClient) : ICartService
+public class CartService(HttpClient httpClient, ICouponService couponService) : ICartService
 {
     private readonly HttpClient _client = httpClient;
     public const string BasePath = "api/v1/Cart";
@@ -45,25 +45,51 @@ public class CartService(HttpClient httpClient) : ICartService
 
         return true;
     }
+    public async Task<bool> ApplyCoupon(CartViewModel cart)
+    {
+        //var couponValid = await couponService.GetCoupon(cart.CartHeader.CouponCode); // Valida se coupon existe
+        //if (couponValid.Id == 0 || couponValid.DiscountAmount == 0)
+        //    return false;
+
+        var response = await _client.PostAsJson($"{BasePath}/apply-coupon", cart);
+        if (!response.IsSuccessStatusCode)
+        { 
+            var content = await response.Content.ReadAsStringAsync();
+            Console.WriteLine(content);
+            throw new Exception("Something went wrong when calling API");
+        }
+
+        return true;
+    }
+    public async Task<bool> RemoveCoupon(string userId)
+    {
+        var response = await _client.DeleteAsync($"{BasePath}/remove-coupon/{userId}");
+        if (!response.IsSuccessStatusCode)
+            throw new Exception("Something went wrong when calling API");
+
+        return true;
+    }
+
     public async Task<CartViewModel> FindUserCart(string UserId)
     {
         var response = await FindCartByUserId(UserId);
         if (response?.CartHeader != null)
         {
+            if (!string.IsNullOrEmpty(response.CartHeader.CouponCode))
+            {
+                var coupon = await couponService.GetCoupon(response.CartHeader.CouponCode);
+                if (coupon?.CouponCode != null)
+                    response.CartHeader.DiscountAmount = coupon.DiscountAmount;
+            }
             foreach (var detail in response.CartDetails)
             {
                 response.CartHeader.PurchaseAmount += (detail.Count * detail.Product.Price); // Calcula o valor total do carrinho
             }
+            response.CartHeader.PurchaseAmount -= response.CartHeader.DiscountAmount; // Aplica o desconto, se houver
         }
 
         return response;
     }
-
-    public async Task<bool> ApplyCoupon(CartViewModel cart, long couponCode)
-    {
-        throw new NotImplementedException();
-    }
-
     public async Task<CartViewModel> Checkout(CartHeaderViewModel cartHeader)
     {
         throw new NotImplementedException();
@@ -73,11 +99,4 @@ public class CartService(HttpClient httpClient) : ICartService
     {
         throw new NotImplementedException();
     }
-
-    public async Task<bool> RemoveCoupon(string userId)
-    {
-        throw new NotImplementedException();
-    }
-
-  
 }

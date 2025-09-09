@@ -59,10 +59,10 @@ namespace GeekShopping.Web
             }).AddHttpMessageHandler<AccessTokenHandler>();
 
             // CouponService
-            //builder.Services.AddHttpClient<ICouponService, CouponService>(c =>
-            //{
-            //    c.BaseAddress = new Uri(builder.Configuration["ServiceUrls:CouponAPI"]);
-            //}).AddHttpMessageHandler<AccessTokenHandler>();
+            builder.Services.AddHttpClient<ICouponService, CouponService>(c =>
+            {
+                c.BaseAddress = new Uri(builder.Configuration["ServiceUrls:CouponAPI"]);
+            }).AddHttpMessageHandler<AccessTokenHandler>();
 
             // Define authentication configuration
             builder.Services.AddAuthentication(options =>

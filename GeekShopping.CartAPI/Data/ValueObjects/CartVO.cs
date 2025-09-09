@@ -3,5 +3,5 @@
 public class CartVO // Not Mapped to a table in the database
 {
     public CartHeaderVO CartHeader { get; set; }
-    public IEnumerable<CartDetailVO> CartDetails { get; set; }
+    public IEnumerable<CartDetailVO>? CartDetails { get; set; } = null;
 }
