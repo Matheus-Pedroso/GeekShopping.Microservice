@@ -90,9 +90,17 @@ public class CartService(HttpClient httpClient, ICouponService couponService) : 
 
         return response;
     }
-    public async Task<CartViewModel> Checkout(CartHeaderViewModel cartHeader)
+    public async Task<CartHeaderViewModel> Checkout(CartHeaderViewModel model)
     {
-        throw new NotImplementedException();
+        var response = await _client.PostAsJson($"{BasePath}/checkout", model);
+        if (!response.IsSuccessStatusCode)
+        {
+            var content = await response.Content.ReadAsStringAsync();
+            Console.WriteLine(content);
+            throw new Exception("Something went wrong when calling API");
+        }
+
+        return await response.ReadContentAs<CartHeaderViewModel>();
     }
 
     public async Task<bool> ClearCart(string userId)

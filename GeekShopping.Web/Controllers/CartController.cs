@@ -63,4 +63,22 @@ public class CartController(IProductService productService, ICartService cartSer
 
         return View(response);
     }
+
+    [HttpPost]
+    public async Task<IActionResult> Checkout(CartViewModel model)
+    {
+        var userId = User.Claims.Where(u => u.Type == "sub")?.FirstOrDefault()?.Value;
+
+        var response = await cartService.Checkout(model.CartHeader);
+
+        if (response != null)
+            return RedirectToAction(nameof(Confirmation));
+
+        return View(model);
+    }
+
+    public async Task<IActionResult> Confirmation()
+    {
+        return View();
+    }
 }

@@ -1,4 +1,5 @@
 ﻿using GeekShopping.CartAPI.Data.ValueObjects;
+using GeekShopping.CartAPI.Messages;
 using GeekShopping.CartAPI.Repository.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -62,5 +63,19 @@ public class CartController(ICartRepository cartRepository) : ControllerBase
         var status = await cartRepository.RemoveCoupon(userId);
         if (!status) return BadRequest();
         return Ok(status);
+    }
+
+    [HttpPost("checkout")]
+    public async Task<ActionResult<CheckoutHeaderVO>> Checkout(CheckoutHeaderVO vo)
+    {
+        if (vo?.UserId == null) return BadRequest();
+        var cart = await cartRepository.FindCartByUserId(vo.UserId);
+        if (cart == null) return NotFound();
+        vo.CartDetails = cart.CartDetails;
+        vo.Time = DateTime.Now;
+
+        // Send Message to RabbitMQ
+
+        return Ok(vo);
     }
 }
