@@ -23,10 +23,6 @@
         "Action": "Start"
       },
       {
-        "Path": "GeekShopping.MessageBus\\GeekShopping.MessageBus.csproj",
-        "Action": "Start"
-      },
-      {
         "Path": "GeekShopping.OrderAPI\\GeekShopping.OrderAPI.csproj",
         "Action": "Start"
       }

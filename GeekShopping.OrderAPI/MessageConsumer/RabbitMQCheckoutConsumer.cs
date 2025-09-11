@@ -3,6 +3,7 @@ using System.Text.Json;
 using GeekShopping.CartAPI.Repository;
 using GeekShopping.OrderAPI.Messages;
 using GeekShopping.OrderAPI.Model;
+using Polly;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
@@ -27,7 +28,7 @@ public class RabbitMQCheckoutConsumer : BackgroundService
             UserName = _username,
             Password = _password
         };
-        _connection = factory.CreateConnection();
+        _connection = TryConnectWithPolly(factory);
         _channel = _connection.CreateModel();
         _channel.QueueDeclare(queue: "checkoutqueue", false, false, false, null);
     }
@@ -46,6 +47,17 @@ public class RabbitMQCheckoutConsumer : BackgroundService
         _channel.BasicConsume("checkoutqueue", false, consumer);
 
         return Task.CompletedTask;
+    }
+
+    private IConnection TryConnectWithPolly(ConnectionFactory factory)
+    {
+        var policy = Polly.Policy.Handle<Exception>()
+            .WaitAndRetry(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), (ex, time) =>
+            {
+                Console.WriteLine($"Tentando se reconectar após {time.TotalSeconds} segundos: {ex.Message}");
+            });
+
+        return policy.Execute(() => factory.CreateConnection());
     }
 
     private async Task ProccessOrder(CheckoutHeaderVO vo)

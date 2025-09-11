@@ -9,7 +9,7 @@ namespace GeekShopping.CartAPI.Controllers;
 
 [Route("api/v1/[controller]")]
 [ApiController]
-public class CartController(ICartRepository cartRepository, IRabbitMQMessageSender rabbitMQMessage) : ControllerBase
+public class CartController(ICartRepository cartRepository, IRabbitMQMessageSender rabbitMQMessage, ICouponRepository couponRepository) : ControllerBase
 {
     [HttpGet("find-cart/{userId}")]
     public async Task<ActionResult<CartVO>> FindById(string userId)
@@ -69,12 +69,19 @@ public class CartController(ICartRepository cartRepository, IRabbitMQMessageSend
     [HttpPost("checkout")]
     public async Task<ActionResult<CheckoutHeaderVO>> Checkout(CheckoutHeaderVO vo)
     {
+        string token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+
         if (vo?.UserId == null) return BadRequest();
         var cart = await cartRepository.FindCartByUserId(vo.UserId);
         if (cart == null) return NotFound();
         vo.CartDetails = cart.CartDetails;
         vo.Time = DateTime.Now;
-
+        if (!string.IsNullOrEmpty(vo.CouponCode))
+        {
+            CouponVO coupon = await couponRepository.GetCouponByCode(vo.CouponCode, token);
+            if (vo.DiscountAmount != coupon.DiscountAmount)
+                return StatusCode(412);
+        }
         // Send Message to RabbitMQ
         rabbitMQMessage.SendMessage(vo, "checkoutqueue");
 

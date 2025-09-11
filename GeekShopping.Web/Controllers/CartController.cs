@@ -71,9 +71,15 @@ public class CartController(IProductService productService, ICartService cartSer
 
         var response = await cartService.Checkout(model.CartHeader);
 
-        if (response != null)
+        if (response != null && response.GetType() == typeof(string))
+        {
+            TempData["Error"] = response;
+            return RedirectToAction(nameof(Checkout));
+        }
+        else if (response != null)
+        {
             return RedirectToAction(nameof(Confirmation));
-
+        }
         return View(model);
     }
 

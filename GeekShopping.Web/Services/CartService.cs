@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System.Net;
+using System.Net.Http;
 using GeekShopping.Web.Models;
 using GeekShopping.Web.Services.Interface;
 using GeekShopping.Web.Utils;
@@ -90,17 +91,20 @@ public class CartService(HttpClient httpClient, ICouponService couponService) : 
 
         return response;
     }
-    public async Task<CartHeaderViewModel> Checkout(CartHeaderViewModel model)
+    public async Task<object> Checkout(CartHeaderViewModel model)
     {
         var response = await _client.PostAsJson($"{BasePath}/checkout", model);
-        if (!response.IsSuccessStatusCode)
+        if (response.IsSuccessStatusCode)
         {
-            var content = await response.Content.ReadAsStringAsync();
-            Console.WriteLine(content);
-            throw new Exception("Something went wrong when calling API");
+            return await response.ReadContentAs<CartHeaderViewModel>();
         }
-
-        return await response.ReadContentAs<CartHeaderViewModel>();
+        else if (response.StatusCode == HttpStatusCode.PreconditionFailed)
+        {
+            return "Coupon Price has changed, please confirm!";
+        }
+        var content = await response.Content.ReadAsStringAsync();
+        Console.WriteLine(content);
+        throw new Exception("Something went wrong when calling API");
     }
 
     public async Task<bool> ClearCart(string userId)
