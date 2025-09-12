@@ -1,15 +1,12 @@
 
 using System.Security.Claims;
-using GeekShopping.CartAPI.Repository;
-using GeekShopping.CartAPI.Repository.Interfaces;
-using GeekShopping.OrderAPI.MessageConsumer;
-using GeekShopping.OrderAPI.Model.Context;
-using GeekShopping.OrderAPI.RabbitMQSender;
+using GeekShopping.PaymentAPI.MessageConsumer;
+using GeekShopping.PaymentAPI.Model.Base;
+using GeekShopping.PaymentProcessor;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
 
-namespace GeekShopping.OrderAPI
+namespace GeekShopping.PaymentAPI
 {
     public class Program
     {
@@ -25,37 +22,7 @@ namespace GeekShopping.OrderAPI
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "GeekShopping.CartAPI", Version = "v1" });
-                c.EnableAnnotations();
-                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-                {
-                    Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
-                    Name = "Authorization",
-                    In = ParameterLocation.Header,
-                    Type = SecuritySchemeType.ApiKey,
-                    Scheme = "Bearer"
-                });
-
-                c.AddSecurityRequirement(new OpenApiSecurityRequirement
-                {
-                    {
-                        new OpenApiSecurityScheme
-                        {
-                            Reference = new OpenApiReference
-                            {
-                                Type = ReferenceType.SecurityScheme,
-                                Id = "Bearer"
-                            },
-                            Scheme = "oauth2",
-                            Name = "Bearer",
-                            In = ParameterLocation.Header
-                        },
-                        new List<string>()
-                    }
-                });
-            }); 
+            builder.Services.AddSwaggerGen();
 
             var app = builder.Build();
 
@@ -72,7 +39,7 @@ namespace GeekShopping.OrderAPI
 
 
             app.MapControllers();
-            
+
             app.Run();
         }
 
@@ -88,10 +55,11 @@ namespace GeekShopping.OrderAPI
             var builder = new DbContextOptionsBuilder<MySQLContext>();
             builder.UseMySql(connection, new MySqlServerVersion(new Version(8, 0, 4)));
 
-            services.Services.AddSingleton(new OrderRepository(builder.Options));
+            services.Services.AddHostedService<RabbitMQPaymentConsumer>();
+            services.Services.AddSingleton<IProcessPayment, ProcessPayment>();
 
-            services.Services.AddHostedService<RabbitMQCheckoutConsumer>();
-            services.Services.AddSingleton<IRabbitMQMessageSender, RabbitMQMessageSender>();
+            //services.Services.AddHostedService<RabbitMQCheckoutConsumer>();
+            //services.Services.AddSingleton<IRabbitMQMessageSender, RabbitMQMessageSender>();
         }
 
 

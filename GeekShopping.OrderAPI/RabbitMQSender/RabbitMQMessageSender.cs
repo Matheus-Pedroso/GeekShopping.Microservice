@@ -1,10 +1,10 @@
 ﻿using System.Text;
 using System.Text.Json;
-using GeekShopping.CartAPI.Messages;
+using GeekShopping.OrderAPI.Messages;
 using GeekShopping.MessageBus;
 using RabbitMQ.Client;
 
-namespace GeekShopping.CartAPI.RabbitMQSender;
+namespace GeekShopping.OrderAPI.RabbitMQSender;
 
 public class RabbitMQMessageSender : IRabbitMQMessageSender
 {
@@ -17,7 +17,7 @@ public class RabbitMQMessageSender : IRabbitMQMessageSender
         if (ConnectionExists())
         {
             using var channel = _connection.CreateModel();
-            channel.QueueDeclare(queueName, false, false, false, null);
+            channel.QueueDeclare(queueName, true, false, false, null);
             byte[] body = GetMessageAsByteArray(message);
             channel.BasicPublish("", queueName, null, body); 
         }
@@ -31,7 +31,7 @@ public class RabbitMQMessageSender : IRabbitMQMessageSender
             WriteIndented = true // Ident for better readability
         };
 
-        var json = JsonSerializer.Serialize<CheckoutHeaderVO>((CheckoutHeaderVO)message, options);
+        var json = JsonSerializer.Serialize<PaymentVO>((PaymentVO)message, options);
         var body = Encoding.UTF8.GetBytes(json);
 
         return body;
@@ -54,7 +54,7 @@ public class RabbitMQMessageSender : IRabbitMQMessageSender
         }
         catch (Exception ex)
         {
-            throw new ApplicationException("O serviço de pedidos não está disponível no momento. Tente novamente mais tarde.", ex);
+            throw new ApplicationException("O serviço de pagamento não está disponível no momento. Tente novamente mais tarde.", ex);
         }
     }
 
