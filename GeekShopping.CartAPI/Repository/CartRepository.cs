@@ -50,7 +50,7 @@ public class CartRepository(MySQLContext context, IMapper mapper) : ICartReposit
     public async Task<CartVO> FindCartByUserId(string userId)
     {
         Cart cart = new Cart();
-        cart.CartHeader = await context.CartHeaders.AsNoTracking().FirstOrDefaultAsync(c => c.UserId == userId);
+        cart.CartHeader = await context.CartHeaders.AsNoTracking().FirstOrDefaultAsync(c => c.UserId == userId) ?? new CartHeader();
         cart.CartDetails = context.CartDetails.AsNoTracking().Where(c => c.CartHeaderId == cart.CartHeader.Id).Include(c => c.Product);
 
         var cartVO = mapper.Map<CartVO>(cart);

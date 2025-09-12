@@ -1,28 +1,29 @@
 ﻿using System.Text;
 using System.Text.Json;
-using GeekShopping.PaymentAPI.Messages;
-using GeekShopping.PaymentAPI.RabbitMQSender;
-using GeekShopping.PaymentProcessor;
+using GeekShopping.CartAPI.Repository;
+using GeekShopping.OrderAPI.Messages;
+using GeekShopping.OrderAPI.Model;
+using GeekShopping.OrderAPI.RabbitMQSender;
 using Polly;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
-namespace GeekShopping.PaymentAPI.MessageConsumer;
+namespace GeekShopping.OrderAPI.MessageConsumer;
 
 public class RabbitMQPaymentConsumer : BackgroundService
 {
+    private readonly OrderRepository _orderRepository;
+    private readonly IRabbitMQMessageSender _messageSender;
+
     private readonly string _hostname = "localhost";
     private readonly string _username = "guest";
     private readonly string _password = "guest";
     private IConnection _connection;
     private IModel _channel;
-    private IRabbitMQMessageSender _rabbitMQMessageSender;
-    private readonly IProcessPayment _processPayment;
 
-    public RabbitMQPaymentConsumer(IProcessPayment processPayment, IRabbitMQMessageSender rabbitMQMessageSender)
+    public RabbitMQPaymentConsumer(OrderRepository orderRepository)
     {
-        _processPayment = processPayment;
-        _rabbitMQMessageSender = rabbitMQMessageSender;
+        _orderRepository = orderRepository;
         var factory = new ConnectionFactory
         {
             HostName = _hostname,
@@ -30,23 +31,28 @@ public class RabbitMQPaymentConsumer : BackgroundService
             UserName = _username,
             Password = _password
         };
+
         _connection = TryConnectWithPolly(factory);
         _channel = _connection.CreateModel();
-        _channel.QueueDeclare(queue: "orderpaymentprocessqueue", durable: false, exclusive: false, autoDelete: false, arguments: null);
+        _channel.QueueDeclare(queue: "orderpaymentresultqueue", durable: false, exclusive: false, autoDelete: false, arguments: null);
     }
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
         stoppingToken.ThrowIfCancellationRequested();
+
         var consumer = new EventingBasicConsumer(_channel);
         consumer.Received += async (channel, evt) =>
         {
             var content = Encoding.UTF8.GetString(evt.Body.ToArray());
-            PaymentMessage vo = JsonSerializer.Deserialize<PaymentMessage>(content);
-            ProccessPayment(vo).GetAwaiter().GetResult();
+            UpdatePaymentResultVO vo = JsonSerializer.Deserialize<UpdatePaymentResultVO>(content);
+
+            await UpdatePaymentStatus(vo);
+
             _channel.BasicAck(evt.DeliveryTag, false);
         };
-        _channel.BasicConsume("orderpaymentprocessqueue", false, consumer);
+
+        _channel.BasicConsume("orderpaymentresultqueue", autoAck: false, consumer);
 
         return Task.CompletedTask;
     }
@@ -62,23 +68,15 @@ public class RabbitMQPaymentConsumer : BackgroundService
         return policy.Execute(() => factory.CreateConnection());
     }
 
-    private async Task ProccessPayment(PaymentMessage vo)
+    private async Task UpdatePaymentStatus(UpdatePaymentResultVO vo)
     {
-        var result = _processPayment.PaymentProcessor();
-
-        UpdatePaymentResultMessage paymentResult = new UpdatePaymentResultMessage()
-        {
-            Status = result,
-            OrderId = vo.OrderId,
-            Email = vo.Email
-        };
         try
         {
-            _rabbitMQMessageSender.SendMessage(paymentResult, "orderpaymentresultqueue");
+            await _orderRepository.UpdateOrderPaymentStatus(vo.OrderId, vo.Status);
         }
         catch (Exception ex)
         {
-            throw new Exception("Erro ao processar o pagamento do pedido", ex);
+            throw new Exception("Erro ao atualizar o status do pagamento", ex);
         }
     }
 }

@@ -93,6 +93,8 @@ public class CartController(ICartRepository cartRepository, IRabbitMQMessageSend
             return StatusCode(503, new {  message = ex.Message });
         }
 
+        await cartRepository.ClearCart(vo.UserId);
+
         return Ok(vo);
     }
 }

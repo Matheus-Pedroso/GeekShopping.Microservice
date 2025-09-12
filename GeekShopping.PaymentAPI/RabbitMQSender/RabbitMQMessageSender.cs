@@ -17,7 +17,7 @@ public class RabbitMQMessageSender : IRabbitMQMessageSender
         if (ConnectionExists())
         {
             using var channel = _connection.CreateModel();
-            channel.QueueDeclare(queueName, true, false, false, null);
+            channel.QueueDeclare(queueName, false, false, false, null);
             byte[] body = GetMessageAsByteArray(message);
             channel.BasicPublish("", queueName, null, body); 
         }
