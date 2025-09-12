@@ -70,7 +70,6 @@ public class CartController(IProductService productService, ICartService cartSer
         var userId = User.Claims.Where(u => u.Type == "sub")?.FirstOrDefault()?.Value;
 
         var response = await cartService.Checkout(model.CartHeader);
-
         if (response != null && response.GetType() == typeof(string))
         {
             TempData["Error"] = response;

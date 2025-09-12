@@ -82,8 +82,16 @@ public class CartController(ICartRepository cartRepository, IRabbitMQMessageSend
             if (vo.DiscountAmount != coupon.DiscountAmount)
                 return StatusCode(412);
         }
+
         // Send Message to RabbitMQ
-        rabbitMQMessage.SendMessage(vo, "checkoutqueue");
+        try
+        {
+            rabbitMQMessage.SendMessage(vo, "checkoutqueue");
+        }
+        catch (ApplicationException ex)
+        {
+            return StatusCode(503, new {  message = ex.Message });
+        }
 
         return Ok(vo);
     }

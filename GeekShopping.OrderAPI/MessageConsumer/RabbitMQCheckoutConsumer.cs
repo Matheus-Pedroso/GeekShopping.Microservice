@@ -51,10 +51,10 @@ public class RabbitMQCheckoutConsumer : BackgroundService
 
     private IConnection TryConnectWithPolly(ConnectionFactory factory)
     {
-        var policy = Polly.Policy.Handle<Exception>()
-            .WaitAndRetry(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), (ex, time) =>
+        var policy = Policy.Handle<Exception>()
+            .WaitAndRetry(10, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), (ex, time) =>
             {
-                Console.WriteLine($"Tentando se reconectar após {time.TotalSeconds} segundos: {ex.Message}");
+                Console.WriteLine($"[RabbitMQ Consumer] Tentando se reconectar após {time.TotalSeconds} segundos: {ex.Message}");
             });
 
         return policy.Execute(() => factory.CreateConnection());

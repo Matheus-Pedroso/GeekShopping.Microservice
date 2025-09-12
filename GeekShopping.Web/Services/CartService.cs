@@ -102,6 +102,10 @@ public class CartService(HttpClient httpClient, ICouponService couponService) : 
         {
             return "Coupon Price has changed, please confirm!";
         }
+        else if (response.StatusCode == HttpStatusCode.ServiceUnavailable)
+        {
+            return "Service Order not working, please try again later";
+        }
         var content = await response.Content.ReadAsStringAsync();
         Console.WriteLine(content);
         throw new Exception("Something went wrong when calling API");

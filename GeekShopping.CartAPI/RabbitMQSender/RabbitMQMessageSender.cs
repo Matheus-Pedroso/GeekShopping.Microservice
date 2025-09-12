@@ -14,20 +14,26 @@ public class RabbitMQMessageSender : IRabbitMQMessageSender
     private IConnection _connection;
     public void SendMessage(BaseMessage message, string queueName)
     {
-        var factory = new ConnectionFactory
+        try
         {
-            HostName = _hostname,
-            Port = 5672,
-            UserName = _username,
-            Password = _password
-        };
+            var factory = new ConnectionFactory
+            {
+                HostName = _hostname,
+                Port = 5672,
+                UserName = _username,
+                Password = _password
+            };
 
-        _connection = factory.CreateConnection();
-
-        using var channel = _connection.CreateModel();
-        channel.QueueDeclare(queueName, false, false, false, null);
-        byte[] body = GetMessageAsByteArray(message);
-        channel.BasicPublish("", queueName, null, body); 
+            _connection = factory.CreateConnection();
+            using var channel = _connection.CreateModel();
+            channel.QueueDeclare(queueName, false, false, false, null);
+            byte[] body = GetMessageAsByteArray(message);
+            channel.BasicPublish("", queueName, null, body); 
+        }
+        catch (Exception ex)
+        {
+            throw new ApplicationException("O serviço de pedidos não está disponível no momento. Tente novamente mais tarde.", ex);
+        }
     }
 
     // Method to convert the message to a byte array
