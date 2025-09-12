@@ -20,6 +20,9 @@ namespace GeekShopping.Web
 
 
             var app = builder.Build();
+            var handler = new HttpClientHandler();
+            handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true;
+            var client = new HttpClient(handler);
 
             // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())

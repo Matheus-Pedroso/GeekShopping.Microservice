@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using GeekShopping.PaymentAPI.MessageConsumer;
 using GeekShopping.PaymentAPI.Model.Base;
+using GeekShopping.PaymentAPI.RabbitMQSender;
 using GeekShopping.PaymentProcessor;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -57,9 +58,8 @@ namespace GeekShopping.PaymentAPI
 
             services.Services.AddHostedService<RabbitMQPaymentConsumer>();
             services.Services.AddSingleton<IProcessPayment, ProcessPayment>();
+            services.Services.AddSingleton<IRabbitMQMessageSender, RabbitMQMessageSender>();
 
-            //services.Services.AddHostedService<RabbitMQCheckoutConsumer>();
-            //services.Services.AddSingleton<IRabbitMQMessageSender, RabbitMQMessageSender>();
         }
 
 

@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using System.Text.Json;
 using GeekShopping.PaymentAPI.Messages;
+using GeekShopping.PaymentAPI.RabbitMQSender;
 using GeekShopping.PaymentProcessor;
 using Polly;
 using RabbitMQ.Client;
@@ -15,11 +16,13 @@ public class RabbitMQPaymentConsumer : BackgroundService
     private readonly string _password = "guest";
     private IConnection _connection;
     private IModel _channel;
+    private IRabbitMQMessageSender _rabbitMQMessageSender;
     private readonly IProcessPayment _processPayment;
 
-    public RabbitMQPaymentConsumer(IProcessPayment processPayment)
+    public RabbitMQPaymentConsumer(IProcessPayment processPayment, IRabbitMQMessageSender rabbitMQMessageSender)
     {
         _processPayment = processPayment;
+        rabbitMQMessageSender = _rabbitMQMessageSender;
         var factory = new ConnectionFactory
         {
             HostName = _hostname,
@@ -61,9 +64,17 @@ public class RabbitMQPaymentConsumer : BackgroundService
 
     private async Task ProccessPayment(PaymentMessage vo)
     {
+        var result = _processPayment.PaymentProcessor();
+
+        UpdatePaymentResultMessage paymentResult = new UpdatePaymentResultMessage()
+        {
+            Status = result,
+            OrderId = vo.OrderId,
+            Email = vo.Email
+        };
         try
         {
-            //_processPayment.PaymentProcessor(paymentVO, "orderpaymentprocessqueue");
+            _rabbitMQMessageSender.SendMessage(paymentResult, "orderpaymentresultqueue");
         }
         catch (Exception ex)
         {

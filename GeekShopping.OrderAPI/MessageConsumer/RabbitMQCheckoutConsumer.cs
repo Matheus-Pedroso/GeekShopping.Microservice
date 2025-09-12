@@ -3,6 +3,7 @@ using System.Text.Json;
 using GeekShopping.CartAPI.Repository;
 using GeekShopping.OrderAPI.Messages;
 using GeekShopping.OrderAPI.Model;
+using GeekShopping.OrderAPI.RabbitMQSender;
 using Polly;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -12,15 +13,18 @@ namespace GeekShopping.OrderAPI.MessageConsumer;
 public class RabbitMQCheckoutConsumer : BackgroundService
 {
     private readonly OrderRepository _orderRepository;
+    private readonly IRabbitMQMessageSender _messageSender;
+
     private readonly string _hostname = "localhost";
     private readonly string _username = "guest";
     private readonly string _password = "guest";
     private IConnection _connection;
     private IModel _channel;
 
-    public RabbitMQCheckoutConsumer(OrderRepository orderRepository)
+    public RabbitMQCheckoutConsumer(OrderRepository orderRepository, IRabbitMQMessageSender messageSender)
     {
         _orderRepository = orderRepository;
+        _messageSender = messageSender;
         var factory = new ConnectionFactory
         {
             HostName = _hostname,
@@ -28,23 +32,28 @@ public class RabbitMQCheckoutConsumer : BackgroundService
             UserName = _username,
             Password = _password
         };
+
         _connection = TryConnectWithPolly(factory);
         _channel = _connection.CreateModel();
-        _channel.QueueDeclare(queue: "checkoutqueue", false, false, false, null);
+        _channel.QueueDeclare(queue: "checkoutqueue", durable: false, exclusive: false, autoDelete: false, arguments: null);
     }
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
         stoppingToken.ThrowIfCancellationRequested();
+
         var consumer = new EventingBasicConsumer(_channel);
         consumer.Received += async (channel, evt) =>
         {
             var content = Encoding.UTF8.GetString(evt.Body.ToArray());
             CheckoutHeaderVO vo = JsonSerializer.Deserialize<CheckoutHeaderVO>(content);
-            ProccessOrder(vo).GetAwaiter().GetResult();
+
+            await ProccessOrder(vo);
+
             _channel.BasicAck(evt.DeliveryTag, false);
         };
-        _channel.BasicConsume("checkoutqueue", false, consumer);
+
+        _channel.BasicConsume("checkoutqueue", autoAck: false, consumer);
 
         return Task.CompletedTask;
     }
@@ -95,5 +104,30 @@ public class RabbitMQCheckoutConsumer : BackgroundService
         }
 
         await _orderRepository.AddOrder(order);
+
+        ProcessPayment(order);
+    }
+
+    private void ProcessPayment(OrderHeader order)
+    {
+        PaymentVO paymentVO = new()
+        {
+            Name = order.FirstName + " " + order.LastName,
+            Email = order.Email,
+            CardNumber = order.CardNumber,
+            CVV = order.CVV,
+            ExpiryMonthYear = order.ExpiryMonthYear,
+            OrderId = order.Id,
+            PurchaseAmount = order.PurchaseAmount,
+        };
+
+        try
+        {
+            _messageSender.SendMessage(paymentVO, "orderpaymentprocessqueue");
+        }
+        catch (Exception ex)
+        {
+            throw new Exception("Erro ao processar o pagamento do pedido", ex);
+        }
     }
 }
