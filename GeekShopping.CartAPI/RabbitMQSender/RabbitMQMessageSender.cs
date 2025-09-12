@@ -14,25 +14,12 @@ public class RabbitMQMessageSender : IRabbitMQMessageSender
     private IConnection _connection;
     public void SendMessage(BaseMessage message, string queueName)
     {
-        try
+        if (ConnectionExists())
         {
-            var factory = new ConnectionFactory
-            {
-                HostName = _hostname,
-                Port = 5672,
-                UserName = _username,
-                Password = _password
-            };
-
-            _connection = factory.CreateConnection();
             using var channel = _connection.CreateModel();
-            channel.QueueDeclare(queueName, false, false, false, null);
+            channel.QueueDeclare(queueName, true, false, false, null);
             byte[] body = GetMessageAsByteArray(message);
             channel.BasicPublish("", queueName, null, body); 
-        }
-        catch (Exception ex)
-        {
-            throw new ApplicationException("O serviço de pedidos não está disponível no momento. Tente novamente mais tarde.", ex);
         }
     }
 
@@ -48,5 +35,34 @@ public class RabbitMQMessageSender : IRabbitMQMessageSender
         var body = Encoding.UTF8.GetBytes(json);
 
         return body;
+    }
+
+
+    private void CreateConnection()
+    {
+        try
+        {
+            var factory = new ConnectionFactory
+            {
+                HostName = _hostname,
+                Port = 5672,
+                UserName = _username,
+                Password = _password
+            };
+
+            _connection = factory.CreateConnection();
+        }
+        catch (Exception ex)
+        {
+            throw new ApplicationException("O serviço de pedidos não está disponível no momento. Tente novamente mais tarde.", ex);
+        }
+    }
+
+    private bool ConnectionExists()
+    {
+        if (_connection == null || !_connection.IsOpen)
+            CreateConnection();
+
+        return _connection != null && _connection.IsOpen;
     }
 }
