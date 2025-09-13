@@ -12,14 +12,15 @@ public class RabbitMQMessageSender : IRabbitMQMessageSender
     private readonly string _username = "guest";
     private readonly string _password = "guest";
     private IConnection _connection;
-    public void SendMessage(BaseMessage message, string queueName)
+    private const string ExchangeName = "FanoutPaymentUpdateExchange";
+    public void SendMessage(BaseMessage message)
     {
         if (ConnectionExists())
         {
             using var channel = _connection.CreateModel();
-            channel.QueueDeclare(queueName, false, false, false, null);
+            channel.ExchangeDeclare(ExchangeName, ExchangeType.Fanout, durable: false);
             byte[] body = GetMessageAsByteArray(message);
-            channel.BasicPublish("", queueName, null, body); 
+            channel.BasicPublish(ExchangeName, "", null, body); 
         }
     }
 
