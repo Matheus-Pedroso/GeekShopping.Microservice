@@ -20,8 +20,9 @@ public class RabbitMQPaymentConsumer : BackgroundService
     private readonly string _password = "guest";
     private IConnection _connection;
     private IModel _channel;
-    private const string ExchangeName = "FanoutPaymentUpdateExchange";
-    string queueName = "";
+    private const string ExchangeName = "DirectPaymentUpdateExchange";
+    private const string PaymentOrderUpdateQueueName = "PaymentOrderUpdateQueueName ";
+
 
     public RabbitMQPaymentConsumer(OrderRepository orderRepository)
     {
@@ -37,9 +38,9 @@ public class RabbitMQPaymentConsumer : BackgroundService
         _connection = TryConnectWithPolly(factory);
         _channel = _connection.CreateModel();
 
-        _channel.ExchangeDeclare(ExchangeName, ExchangeType.Fanout, durable: false);
-        queueName = _channel.QueueDeclare().QueueName;
-        _channel.QueueBind(queueName, ExchangeName, "");
+        _channel.ExchangeDeclare(ExchangeName, ExchangeType.Direct, durable: false);
+        _channel.QueueDeclare(PaymentOrderUpdateQueueName, false, false, false, null);
+        _channel.QueueBind(PaymentOrderUpdateQueueName, ExchangeName, "PaymentOrder");
     }
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -57,7 +58,7 @@ public class RabbitMQPaymentConsumer : BackgroundService
             _channel.BasicAck(evt.DeliveryTag, false);
         };
 
-        _channel.BasicConsume(queueName, autoAck: false, consumer);
+        _channel.BasicConsume(PaymentOrderUpdateQueueName, autoAck: false, consumer);
 
         return Task.CompletedTask;
     }

@@ -12,15 +12,26 @@ public class RabbitMQMessageSender : IRabbitMQMessageSender
     private readonly string _username = "guest";
     private readonly string _password = "guest";
     private IConnection _connection;
-    private const string ExchangeName = "FanoutPaymentUpdateExchange";
+    private const string ExchangeName = "DirectPaymentUpdateExchange";
+    private const string PaymentEmailUpdateQueueName = "PaymentEmailUpdateQueueName";
+    private const string PaymentOrderUpdateQueueName = "PaymentOrderUpdateQueueName ";
     public void SendMessage(BaseMessage message)
     {
         if (ConnectionExists())
         {
             using var channel = _connection.CreateModel();
-            channel.ExchangeDeclare(ExchangeName, ExchangeType.Fanout, durable: false);
+            channel.ExchangeDeclare(ExchangeName, ExchangeType.Direct, durable: false);
+
+            channel.QueueDeclare(PaymentEmailUpdateQueueName, false, false, false, null);
+            channel.QueueDeclare(PaymentOrderUpdateQueueName, false, false, false, null);
+
+            channel.QueueBind(PaymentEmailUpdateQueueName, ExchangeName, "PaymentEmail");
+            channel.QueueBind(PaymentOrderUpdateQueueName, ExchangeName, "PaymentOrder");
+
             byte[] body = GetMessageAsByteArray(message);
-            channel.BasicPublish(ExchangeName, "", null, body); 
+
+            channel.BasicPublish(ExchangeName, "PaymentEmail", null, body); 
+            channel.BasicPublish(ExchangeName, "PaymentOrder", null, body); 
         }
     }
 
