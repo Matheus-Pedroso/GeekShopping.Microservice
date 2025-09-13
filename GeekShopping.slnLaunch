@@ -29,6 +29,10 @@
       {
         "Path": "GeekShopping.PaymentAPI\\GeekShopping.PaymentAPI.csproj",
         "Action": "Start"
+      },
+      {
+        "Path": "GeekShopping.Email\\GeekShopping.Email.csproj",
+        "Action": "Start"
       }
     ]
   }

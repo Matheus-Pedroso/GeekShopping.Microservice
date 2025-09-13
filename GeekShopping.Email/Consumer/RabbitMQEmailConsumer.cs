@@ -1,19 +1,16 @@
 ﻿using System.Text;
 using System.Text.Json;
 using GeekShopping.CartAPI.Repository;
-using GeekShopping.OrderAPI.Messages;
-using GeekShopping.OrderAPI.Model;
-using GeekShopping.OrderAPI.RabbitMQSender;
+using GeekShopping.Email.Messages;
 using Polly;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
-namespace GeekShopping.OrderAPI.MessageConsumer;
+namespace GeekShopping.Email.MessageConsumer;
 
-public class RabbitMQPaymentConsumer : BackgroundService
+public class RabbitMQEmailConsumer : BackgroundService
 {
-    private readonly OrderRepository _orderRepository;
-    private readonly IRabbitMQMessageSender _messageSender;
+    private readonly EmailRepository _emailRepository;
 
     private readonly string _hostname = "localhost";
     private readonly string _username = "guest";
@@ -23,9 +20,9 @@ public class RabbitMQPaymentConsumer : BackgroundService
     private const string ExchangeName = "FanoutPaymentUpdateExchange";
     string queueName = "";
 
-    public RabbitMQPaymentConsumer(OrderRepository orderRepository)
+    public RabbitMQEmailConsumer(EmailRepository emailRepository)
     {
-        _orderRepository = orderRepository;
+        _emailRepository = emailRepository;
         var factory = new ConnectionFactory
         {
             HostName = _hostname,
@@ -50,9 +47,9 @@ public class RabbitMQPaymentConsumer : BackgroundService
         consumer.Received += async (channel, evt) =>
         {
             var content = Encoding.UTF8.GetString(evt.Body.ToArray());
-            UpdatePaymentResultVO vo = JsonSerializer.Deserialize<UpdatePaymentResultVO>(content);
+            UpdatePaymentResultMessage message = JsonSerializer.Deserialize<UpdatePaymentResultMessage>(content);
 
-            await UpdatePaymentStatus(vo);
+            await ProccessLogs(message);
 
             _channel.BasicAck(evt.DeliveryTag, false);
         };
@@ -73,15 +70,15 @@ public class RabbitMQPaymentConsumer : BackgroundService
         return policy.Execute(() => factory.CreateConnection());
     }
 
-    private async Task UpdatePaymentStatus(UpdatePaymentResultVO vo)
+    private async Task ProccessLogs(UpdatePaymentResultMessage message)
     {
         try
         {
-            await _orderRepository.UpdateOrderPaymentStatus(vo.OrderId, vo.Status);
+            await _emailRepository.LogEmail(message);
         }
         catch (Exception ex)
         {
-            throw new Exception("Erro ao atualizar o status do pagamento", ex);
+            throw new Exception("Erro ao enviar email", ex);
         }
     }
 }
