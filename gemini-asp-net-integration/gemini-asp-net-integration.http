@@ -1,6 +1,0 @@
-@gemini_asp_net_integration_HostAddress = http://localhost:5257
-
-GET {{gemini_asp_net_integration_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
