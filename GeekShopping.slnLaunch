@@ -33,6 +33,10 @@
       {
         "Path": "GeekShopping.Email\\GeekShopping.Email.csproj",
         "Action": "Start"
+      },
+      {
+        "Path": "GeekShopping.APIGateway\\GeekShopping.APIGateway.csproj",
+        "Action": "Start"
       }
     ]
   }
