@@ -1,0 +1,6 @@
+@TesteIA_HostAddress = http://localhost:5030
+
+GET {{TesteIA_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
