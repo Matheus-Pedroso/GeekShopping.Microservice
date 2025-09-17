@@ -1,7 +1,8 @@
 ﻿using System.ComponentModel;
-using TesteIA.Services.Interface;
+using System.Text.Json;
 using Microsoft.SemanticKernel;
 using TesteIA.Models;
+using TesteIA.Services.Interface;
 
 namespace TesteIA.Plugins;
 
@@ -24,6 +25,53 @@ public class ProductPlugin(IProductService productService)
         var products = await _productService.FindAll();
         return products.ToList();
     }
+    [KernelFunction("get_product")]
+    [Description("Return a product")]
+    public async Task<ProductViewModel> GetProduct(long id)
+    {
+        var product = await _productService.FindById(id);
+        return product;
+    }
+
+    [KernelFunction("create_product")]
+    [Description("Create a product")]
+    public async Task<ProductViewModel> CreateProduct(string Name, string Description, decimal Price, string ImageUrl, string CategoryName)
+    {
+        var model = new ProductViewModel
+        {
+            Name = Name,
+            Description = Description,
+            Price = Price,
+            ImageUrl = ImageUrl,
+            CategoryName = CategoryName
+        };
+        var products = await _productService.Create(model);
+        return products;
+    }
+    [KernelFunction("update_product")]
+    [Description("Update a product")]
+    public async Task<ProductViewModel> UpdateProduct(long id, string Name, string Description, decimal Price, string ImageUrl, string CategoryName)
+    {
+        var model = new ProductViewModel
+        {
+            Id = id,
+            Name = Name,
+            Description = Description,
+            Price = Price,
+            ImageUrl = ImageUrl,
+            CategoryName = CategoryName
+        };
+        var products = await _productService.Update(model);
+        return products;
+    }
+    [KernelFunction("delete_product")]
+    [Description("delete a product")]
+    public async Task<bool> DeleteProduct(long id)
+    {
+        var products = await _productService.Delete(id);
+        return products;
+    }
+    
 }
 
 public record Product

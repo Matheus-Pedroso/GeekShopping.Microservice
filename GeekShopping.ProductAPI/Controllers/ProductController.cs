@@ -17,7 +17,7 @@ public class ProductController(IProductRepository repository) : ControllerBase
 
         return Ok(result);
     }
-    [Authorize]
+    //[Authorize]
     [HttpGet("{id:int}")]
     public async Task<ActionResult<ProductVO>> GetById(long id)
     {
@@ -27,7 +27,7 @@ public class ProductController(IProductRepository repository) : ControllerBase
         return Ok(result);
     }
     [HttpPost]
-    [Authorize]
+    //[Authorize]
     public async Task<ActionResult<ProductVO>> Create([FromBody] ProductVO productVO)
     {
         if (productVO is null)
@@ -37,7 +37,7 @@ public class ProductController(IProductRepository repository) : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
     [HttpPut]
-    [Authorize]
+    //[Authorize]
     public async Task<ActionResult<ProductVO>> Update([FromBody] ProductVO productVO)
     {
         if (productVO is null)
@@ -50,7 +50,7 @@ public class ProductController(IProductRepository repository) : ControllerBase
         return Ok(result);
     }
     [HttpDelete("{id}")]
-    [Authorize(Roles = Role.Admin)]
+    //[Authorize(Roles = Role.Admin)]
     public async Task<ActionResult> Delete(long id)
     {
         bool isDeleted = await repository.Delete(id);
