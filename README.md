@@ -22,6 +22,7 @@ Este projeto é um sistema de e-commerce desenvolvido com arquitetura de micross
 - **PaymentAPI** → Processamento de pagamentos
 - **IdentityServer** → Autenticação e Autorização
 - **API Gateway (Ocelot)** → Roteamento e controle centralizado
+- **IA Ollama** -> Testes com Ollama
 
 ## 🔗 Comunicação Entre Serviços
 
@@ -37,4 +38,5 @@ Este projeto é um sistema de e-commerce desenvolvido com arquitetura de micross
 - Processamento de pagamento via RabbitMQ
 - Resiliência de conexão com RabbitMQ utilizando Polly
 - API Gateway centralizando todas as rotas
+- IA Ollama
 
