@@ -1,9 +1,11 @@
 ﻿using System.ComponentModel;
+using TesteIA.Services.Interface;
 using Microsoft.SemanticKernel;
+using TesteIA.Models;
 
 namespace TesteIA.Plugins;
 
-public class ProductPlugin
+public class ProductPlugin(IProductService productService)
 {
     private readonly List<Product> _products = 
         [
@@ -13,14 +15,14 @@ public class ProductPlugin
             new(Id: 4, Name: "Monitor", IsActive: true, Quantity: 1),
             new(Id: 5, Name: "Keyboard", IsActive: true, Quantity: 150)
         ];
-
+    private readonly IProductService _productService = productService;
 
     [KernelFunction("get_products")]
     [Description("Returns list of products")]
-    public async Task<List<Product>> GetAllProducts()
+    public async Task<List<ProductViewModel>> GetAllProducts()
     {
-        await Task.Delay(1);
-        return _products;
+        var products = await _productService.FindAll();
+        return products.ToList();
     }
 }
 

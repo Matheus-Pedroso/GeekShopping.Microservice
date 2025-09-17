@@ -19,7 +19,8 @@ public class ChatController(Kernel kernel) : ControllerBase
         var chatHistory = new ChatHistory();
         var chatCompletion = _kernel.GetRequiredService<IChatCompletionService>();
 
-        _kernel.Plugins.AddFromType<ProductPlugin>("Plugins");
+        _kernel.Plugins.AddFromType<ProductPlugin>("Plugins", _kernel.Services);
+
 
         // Se a função chama antes ou depois
         OllamaPromptExecutionSettings settings = new OllamaPromptExecutionSettings
